@@ -1,14 +1,42 @@
 import { NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { streamFromOpenRouter } from '@/lib/openrouter';
+import { authOptions } from '@/lib/auth';
+import { deductCredit } from '@/lib/supabase';
 
-export const runtime = 'edge';
+// Switch to Node.js runtime for NextAuth compatibility
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const { prompt, models, conversationHistory } = await req.json();
 
     if (!prompt || !models || !Array.isArray(models) || models.length === 0) {
       return new Response('Invalid request', { status: 400 });
+    }
+
+    // Check and deduct credits (1 credit per prompt, regardless of model count)
+    const creditResult = await deductCredit(session.user.email, models.length);
+    if (!creditResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Insufficient credits',
+          credits: creditResult.credits,
+        }),
+        {
+          status: 402,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
