@@ -1,6 +1,6 @@
 # llm arena
 
-compare any llm. side by side. free.
+compare any llm. side by side. 
 
 ![screenshot](screenshot.png)
 ![screenshot](screenshot2.png)
