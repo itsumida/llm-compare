@@ -5,7 +5,7 @@ compare any llm. side by side. free.
 ![screenshot](screenshot.png)
 ![screenshot](screenshot2.png)
 
-run the same prompt across multiple ai models at once and see who answers better, faster, and more accurately — no account needed.
+run the same prompt across multiple ai models at once and see who answers better, faster, and more accurately - no account needed.
 
 ---
 
@@ -39,7 +39,3 @@ npm run dev
 1. pick up to 4 models
 2. type a prompt
 3. compare responses side by side
-
-## license
-
-mit
