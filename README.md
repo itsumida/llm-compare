@@ -3,6 +3,7 @@
 compare any llm. side by side. free.
 
 ![screenshot](screenshot.png)
+![screenshot](screenshot2.png)
 
 run the same prompt across multiple ai models at once and see who answers better, faster, and more accurately — no account needed.
 
