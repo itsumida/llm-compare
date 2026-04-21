@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession, signIn } from 'next-auth/react';
 import ReactMarkdown from 'react-markdown';
 import Sidebar from '@/components/Sidebar';
 import { AVAILABLE_MODELS } from '@/lib/openrouter';
@@ -34,14 +33,11 @@ function MaterialIcon({ name, className = '', style }: { name: string; className
 function CompareContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const { data: session, status } = useSession();
   const [models, setModels] = useState<string[]>([]);
   const [prompt, setPrompt] = useState('');
   const [responses, setResponses] = useState<Record<string, ResponseData>>({});
   const [history, setHistory] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(false);
-  const [credits, setCredits] = useState<number | null>(null);
-  const [noCredits, setNoCredits] = useState(false);
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -49,12 +45,6 @@ function CompareContent() {
     if (m) setModels(m.split(','));
     else router.push('/models');
   }, [params, router]);
-
-  useEffect(() => {
-    if (session?.user?.email) {
-      fetch('/api/credits').then(r => r.json()).then(d => setCredits(d.credits));
-    }
-  }, [session, loading]);
 
   useEffect(() => {
     Object.values(refs.current).forEach(el => {
@@ -82,13 +72,10 @@ function CompareContent() {
 
   const send = async () => {
     if (!prompt.trim() || !models.length) return;
-    if (!session) { signIn('google'); return; }
-    if (credits !== null && credits < 1) { setNoCredits(true); return; }
 
     const p = prompt.trim();
     setPrompt('');
     setLoading(true);
-    setNoCredits(false);
 
     const newHist: Record<string, Message[]> = {};
     models.forEach(id => {
@@ -117,13 +104,6 @@ function CompareContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: p, models, conversationHistory: newHist }),
       });
-
-      if (res.status === 402) {
-        setCredits((await res.json()).credits);
-        setNoCredits(true);
-        setLoading(false);
-        return;
-      }
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -185,34 +165,6 @@ function CompareContent() {
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="flex h-full items-center justify-center bg-background">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="flex h-full">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center bg-background">
-          <div className="text-center">
-            <h1 className="font-primary text-2xl font-bold text-foreground mb-4">Sign in to compare</h1>
-            <p className="font-secondary text-muted-foreground mb-6">Create a free account to get started</p>
-            <button
-              onClick={() => signIn('google')}
-              className="font-secondary text-sm font-medium px-6 py-3 bg-primary text-primary-foreground rounded-pill hover:opacity-90 transition-opacity"
-            >
-              Sign in with Google
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!models.length) return null;
 
   return (
@@ -220,63 +172,35 @@ function CompareContent() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="flex items-center justify-between h-[72px] px-8 border-b border-border bg-card">
-          <div className="flex items-center gap-3">
-            <MaterialIcon name="compare_arrows" className="text-foreground" />
-            <h1 className="font-primary text-[18px] font-bold text-foreground leading-none">Compare</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            {credits !== null && (
-              <span className="font-secondary text-sm text-muted-foreground">
-                {credits} credits
-              </span>
-            )}
-            <button
-              onClick={() => router.push('/models')}
-              className="flex items-center gap-2 font-secondary text-sm font-medium px-4 py-2 bg-secondary text-secondary-foreground rounded-pill hover:opacity-80 transition-opacity"
-            >
-              <MaterialIcon name="add" style={{ fontSize: 18, width: 18, height: 18 }} />
-              New Session
-            </button>
-          </div>
-        </header>
-
-        {/* No credits banner */}
-        {noCredits && (
-          <div className="flex items-center justify-between px-8 py-3 bg-[var(--color-warning)] border-b border-border">
-            <span className="font-secondary text-sm text-[var(--color-warning-foreground)]">
-              Out of credits
-            </span>
-            <button
-              onClick={() => router.push('/pricing')}
-              className="font-secondary text-xs font-medium px-3 py-1.5 bg-primary text-primary-foreground rounded-pill"
-            >
-              Buy credits
-            </button>
-          </div>
-        )}
-
         {/* Model selector row */}
-        <div className="flex items-center gap-4 px-8 py-4 border-b border-border">
-          {models.map((id, i) => {
-            const model = AVAILABLE_MODELS.find(m => m.id === id);
-            return (
-              <div key={id} className="flex items-center gap-3">
-                {i > 0 && (
-                  <span className="text-muted-foreground font-secondary text-sm">vs</span>
-                )}
-                <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-m border border-border">
-                  <span className="font-secondary text-sm font-medium text-foreground">
-                    {model?.name || id}
-                  </span>
-                  <span className="font-secondary text-xs text-muted-foreground">
-                    {model?.provider}
-                  </span>
+        <div className="flex items-center justify-between gap-4 px-8 py-4 border-b border-border">
+          <div className="flex items-center gap-4">
+            {models.map((id, i) => {
+              const model = AVAILABLE_MODELS.find(m => m.id === id);
+              return (
+                <div key={id} className="flex items-center gap-3">
+                  {i > 0 && (
+                    <span className="text-muted-foreground font-secondary text-sm">vs</span>
+                  )}
+                  <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-m border border-border">
+                    <span className="font-secondary text-sm font-medium text-foreground">
+                      {model?.name || id}
+                    </span>
+                    <span className="font-secondary text-xs text-muted-foreground">
+                      {model?.provider}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          <button
+            onClick={() => router.push('/models')}
+            className="flex items-center gap-2 font-secondary text-sm font-medium px-4 py-2 bg-secondary text-secondary-foreground rounded-pill hover:opacity-80 transition-opacity shrink-0"
+          >
+            <MaterialIcon name="add" style={{ fontSize: 18, width: 18, height: 18 }} />
+            New Session
+          </button>
         </div>
 
         {/* Metrics row */}
@@ -324,7 +248,6 @@ function CompareContent() {
                 key={id}
                 className={`flex-1 flex flex-col min-w-0 ${i < models.length - 1 ? 'border-r border-border' : ''}`}
               >
-                {/* Panel header */}
                 <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card/50">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary" />
@@ -337,7 +260,6 @@ function CompareContent() {
                   )}
                 </div>
 
-                {/* Messages area */}
                 <div
                   ref={el => { refs.current[id] = el; }}
                   className="flex-1 overflow-y-auto p-6 space-y-4"
@@ -417,16 +339,7 @@ function CompareContent() {
               </button>
             </div>
           </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="font-secondary text-xs text-muted-foreground">
-              Press Enter to send
-            </span>
-            {credits !== null && (
-              <span className="font-secondary text-xs text-muted-foreground">
-                {credits} credits remaining
-              </span>
-            )}
-          </div>
+          <p className="font-secondary text-xs text-muted-foreground mt-2">Press Enter to send</p>
         </div>
       </div>
     </div>

@@ -41,22 +41,21 @@ export default function ModelsPage() {
   };
 
   return (
-    <div className="min-h-screen mesh-bg noise">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="pt-20 pb-32 px-6">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold mb-2">Select models</h1>
-            <p className="text-[#a1a1aa]">Choose up to 4 models to compare</p>
+            <h1 className="text-2xl font-semibold text-foreground mb-2">Select models</h1>
+            <p className="text-muted-foreground">Choose up to 4 models to compare</p>
           </div>
 
           {/* Search & Filter */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="flex-1 relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717a]"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -69,13 +68,13 @@ export default function ModelsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search models..."
-                className="input pl-10"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors text-sm"
               />
             </div>
             <select
               value={provider || ''}
               onChange={(e) => setProvider(e.target.value || null)}
-              className="input w-auto min-w-[140px] cursor-pointer"
+              className="w-auto min-w-[140px] px-3 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value="">All providers</option>
               {PROVIDERS.map(p => (
@@ -97,28 +96,28 @@ export default function ModelsPage() {
                   disabled={isDisabled}
                   className={`text-left p-4 rounded-xl border transition-all ${
                     isSelected
-                      ? 'bg-[#a78bfa]/10 border-[#a78bfa]/40'
+                      ? 'bg-primary/10 border-primary/40'
                       : isDisabled
-                      ? 'bg-[#18181b]/50 border-[#27272a] opacity-40 cursor-not-allowed'
-                      : 'bg-[#18181b] border-[#27272a] hover:border-[#3f3f46]'
+                      ? 'bg-card border-border opacity-40 cursor-not-allowed'
+                      : 'bg-card border-border hover:border-primary/30 hover:bg-secondary/50'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-xs font-medium text-[#71717a] mb-1 block">
+                      <span className="text-xs font-medium text-muted-foreground mb-1 block">
                         {model.provider}
                       </span>
-                      <h3 className="font-medium">{model.name}</h3>
+                      <h3 className="font-medium text-foreground">{model.name}</h3>
                     </div>
                     <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
                         isSelected
-                          ? 'bg-[#a78bfa] border-[#a78bfa]'
-                          : 'border-[#3f3f46]'
+                          ? 'bg-primary border-primary'
+                          : 'border-border'
                       }`}
                     >
                       {isSelected && (
-                        <svg className="w-3 h-3 text-[#09090b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -130,7 +129,7 @@ export default function ModelsPage() {
           </div>
 
           {filtered.length === 0 && (
-            <div className="text-center py-16 text-[#71717a]">
+            <div className="text-center py-16 text-muted-foreground">
               No models found
             </div>
           )}
@@ -138,16 +137,16 @@ export default function ModelsPage() {
       </main>
 
       {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#09090b]/90 backdrop-blur-md border-t border-[#27272a]">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-sm text-[#a1a1aa]">
-            <span className="font-semibold text-white">{selected.length}</span> of 4 selected
+      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <span className="text-sm text-muted-foreground shrink-0">
+            <span className="font-semibold text-foreground">{selected.length}</span> of 4 selected
           </span>
           <div className="flex items-center gap-3">
             {selected.length > 0 && (
               <button
                 onClick={() => setSelected([])}
-                className="btn btn-ghost text-sm"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors bg-card hover:bg-secondary"
               >
                 Clear
               </button>
@@ -155,7 +154,7 @@ export default function ModelsPage() {
             <button
               onClick={handleCompare}
               disabled={selected.length === 0}
-              className="btn btn-primary text-sm"
+              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-30 transition-opacity"
             >
               Compare
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
